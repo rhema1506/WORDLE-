@@ -18,12 +18,14 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from django.http import HttpResponse
+from django.shortcuts import redirect
 
 urlpatterns = [
-    path('', lambda request: HttpResponse(" Wordle API Backend Running!")),
+    path('', lambda request: redirect('/admin/')), 
     path('admin/', admin.site.urls),
-    path('api/game/', include('game.urls')),
+    path('accounts/', include('allauth.urls')),  
+    path('api/game/', include('game.urls')),  
+
 ]
 
 

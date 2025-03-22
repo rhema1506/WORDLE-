@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import WordList
+from .models import Word, Game, Leaderboard
 
-@admin.register(WordList)
-class WordListAdmin(admin.ModelAdmin):
-    list_display = ('id', 'word')
+admin.site.register(Word)
+admin.site.register(Game)
+admin.site.register(Leaderboard)

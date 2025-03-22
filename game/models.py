@@ -1,25 +1,34 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.utils import timezone
+import random
 
-class WordList(models.Model):
-    word = models.CharField(max_length=5, unique=True)
+class Word(models.Model):
+    text = models.CharField(max_length=5, unique=True)
 
     def __str__(self):
-        return self.word
+        return self.text
 
-class GameSession(models.Model):
-    word_to_guess = models.ForeignKey(WordList, on_delete=models.CASCADE)
-    attempts_left = models.IntegerField(default=6)
+
+class Game(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    word = models.ForeignKey(Word, on_delete=models.CASCADE)
+    guesses = models.JSONField(default=list)
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(default=timezone.now)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    result = models.CharField(max_length=10, blank=True)  # win/lose
 
     def __str__(self):
-        return f"Game {self.id} - Active: {self.is_active}"
+        return f"{self.user.username} - {self.word.text} - {self.result}"
 
-class WordStats(models.Model):
-    date = models.DateField(default=timezone.now)
-    total_words = models.IntegerField(default=0)
-    words_used_today = models.IntegerField(default=0)
+
+class Leaderboard(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    total_games = models.IntegerField(default=0)
+    total_wins = models.IntegerField(default=0)
+    current_streak = models.IntegerField(default=0)
+    longest_streak = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.date}: {self.words_used_today} used"
+        return f"{self.user.username}'s stats"

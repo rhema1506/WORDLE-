@@ -1,99 +1,94 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
-from .models import WordList, GameSession, WordStats
-from django.utils.timezone import now
-from random import choice
+from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
+from .models import Word, Game, Leaderboard
+from .serializers import GameSerializer, LeaderboardSerializer
+import random
 
-def update_word_stats():
-    today = now().date()
-    stats, created = WordStats.objects.get_or_create(date=today)
-    stats.total_words = WordList.objects.count()
-    stats.save()
 
-class StartGame(APIView):
+def generate_feedback(guess, correct_word):
+    feedback = []
+    for idx, letter in enumerate(guess):
+        if letter == correct_word[idx]:
+            feedback.append('green')
+        elif letter in correct_word:
+            feedback.append('yellow')
+        else:
+            feedback.append('grey')
+    return feedback
+
+
+class StartGameView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
-        update_word_stats()
+        # Select a random word for the game
+        word = random.choice(Word.objects.all())
+        game = Game.objects.create(user=request.user, word=word)
+        return Response({'message': 'Game started', 'game_id': game.id})
 
-        words = WordList.objects.all()
-        if not words.exists():
-            return Response({'error': 'No words in database!'}, status=status.HTTP_400_BAD_REQUEST)
 
-        random_word = choice(words)
-        game = GameSession.objects.create(word_to_guess=random_word)
+class GuessWordView(APIView):
+    permission_classes = [IsAuthenticated]
 
-        # Increment today's word usage
-        stats = WordStats.objects.get(date=now().date())
-        stats.words_used_today += 1
-        stats.save()
-
-        return Response({
-            'message': 'Game started!',
-            'game_id': game.id,
-            'attempts_left': game.attempts_left
-        })
-
-class MakeGuess(APIView):
     def post(self, request, game_id):
-        game = get_object_or_404(GameSession, id=game_id)
-
-        if not game.is_active:
-            return Response({'error': 'Game over!'}, status=status.HTTP_400_BAD_REQUEST)
-
         guess = request.data.get('guess', '').lower()
         if len(guess) != 5:
-            return Response({'error': 'Guess must be a 5-letter word.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Guess must be a 5-letter word'}, status=400)
 
-        correct_word = game.word_to_guess.word
+        game = Game.objects.filter(id=game_id, user=request.user, is_active=True).first()
+        if not game:
+            return Response({'error': 'Active game not found'}, status=404)
 
-        # Build response (e.g., correct position and letters)
-        result = []
-        for i in range(5):
-            if guess[i] == correct_word[i]:
-                result.append({'letter': guess[i], 'result': 'correct'})
-            elif guess[i] in correct_word:
-                result.append({'letter': guess[i], 'result': 'present'})
-            else:
-                result.append({'letter': guess[i], 'result': 'absent'})
-
-        game.attempts_left -= 1
-        if guess == correct_word:
+        feedback = generate_feedback(guess, game.word.text)
+        game.guesses.append({'guess': guess, 'feedback': feedback})
+        
+        if guess == game.word.text:
             game.is_active = False
-            message = '🎉 Congratulations! You guessed the word!'
-        elif game.attempts_left <= 0:
+            game.result = 'win'
+            game.finished_at = timezone.now()
+
+            leaderboard, created = Leaderboard.objects.get_or_create(user=request.user)
+            leaderboard.total_games += 1
+            leaderboard.total_wins += 1
+            leaderboard.current_streak += 1
+            leaderboard.longest_streak = max(leaderboard.longest_streak, leaderboard.current_streak)
+            leaderboard.save()
+
+        elif len(game.guesses) >= 6:
             game.is_active = False
-            message = f'❌ Game over! The word was "{correct_word}".'
-        else:
-            message = 'Try again!'
+            game.result = 'lose'
+            game.finished_at = timezone.now()
+
+            leaderboard, created = Leaderboard.objects.get_or_create(user=request.user)
+            leaderboard.total_games += 1
+            leaderboard.current_streak = 0
+            leaderboard.save()
 
         game.save()
 
         return Response({
-            'message': message,
-            'result': result,
-            'attempts_left': game.attempts_left,
-            'game_active': game.is_active
+            'feedback': feedback,
+            'result': game.result,
+            'guesses': game.guesses,
+            'remaining_guesses': 6 - len(game.guesses)
         })
 
-class GameStatus(APIView):
-    def get(self, request, game_id):
-        game = get_object_or_404(GameSession, id=game_id)
 
-        return Response({
-            'game_id': game.id,
-            'attempts_left': game.attempts_left,
-            'is_active': game.is_active,
-            'created_at': game.created_at
-        })
+class LeaderboardView(APIView):
+    permission_classes = [IsAuthenticated]
 
-class WordStatsView(APIView):
     def get(self, request):
-        stats = WordStats.objects.all().order_by('-date')[:7]
-        data = [{
-            'date': s.date,
-            'total_words': s.total_words,
-            'words_used_today': s.words_used_today
-        } for s in stats]
+        leaderboard = Leaderboard.objects.order_by('-longest_streak')[:10]
+        serializer = LeaderboardSerializer(leaderboard, many=True)
+        return Response(serializer.data)
 
-        return Response(data)
+
+class UserStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        leaderboard, created = Leaderboard.objects.get_or_create(user=request.user)
+        serializer = LeaderboardSerializer(leaderboard)
+        return Response(serializer.data)
