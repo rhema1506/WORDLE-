@@ -6,7 +6,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # Update this path if you keep your file elsewhere
-        word_file_path = 'wordlist.txt'
+        word_file_path = r'C:\Users\rhmus\wordle_backend\wordlist.txt'
         
         try:
             with open(word_file_path, 'r') as file:
