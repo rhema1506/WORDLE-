@@ -1,2 +1,67 @@
-# WORDLE-
-The Wordle Game Backend is built using Django, Django REST Framework (DRF), PostgreSQL, and Django AllAuth for authentication. It provides a RESTful API for game logic, user authentication, and leaderboard tracking. The project structure includes key directories like game/ for game-related logic, wordle_project/ for settings, and templates/ for email and authentication templates. To set up, clone the repository, create a virtual environment, install dependencies from requirements.txt, configure the .env file with SECRET_KEY, DATABASE_URL, and ALLOWED_HOSTS, and apply migrations using python manage.py migrate. Load the word list with python manage.py load_words before starting the server with python manage.py runserver. The admin panel is accessible at http://127.0.0.1:8000/admin/, and a superuser can be created using python manage.py createsuperuser. The API is documented with Swagger at http://127.0.0.1:8000/swagger/ and Redoc at http://127.0.0.1:8000/redoc/. Key API endpoints include authentication (/accounts/signup/, /accounts/login/, /accounts/logout/) and game actions (/api/game/start/, /api/game/guess/, /api/game/leaderboard/). 
+Требования к разработке интерфейса для игры Wordle
+Для обеспечения бесперебойного процесса разработки и поддержания согласованности клиент должен придерживаться следующих требований к интерфейсу для игры Wordle:
+
+1. Стек технологий
+Фреймворк: React.js (предпочтительно) или простой JavaScript
+
+Стиль: Tailwind CSS или CSS-модули
+
+Управление состоянием: React Context API, Redux или перехватчики useState/useEffect
+
+Менеджер пакетов: npm или yarn
+
+2. Дизайн пользовательского интерфейса /UX
+Адаптивный и удобный для мобильных устройств макет
+
+Чистый и минималистичный дизайн
+
+Поддержка темного режима (необязательно, но предпочтительно)
+
+Плавная анимация для взаимодействия (например, переворачивание букв, изменение цвета)
+
+Доступный дизайн с надлежащей контрастностью и навигацией по клавиатуре
+
+3. Основные функциональные возможности
+Сетка размером 5х6 для ввода слов
+
+Виртуальная клавиатура для выбора букв (опционально для мобильных устройств)
+
+Обратная связь с цветовой кодировкой:
+
+Зеленый: Правильная буква в правильном положении
+
+Желтый: Правильная буква в неправильном положении
+
+Серый: Неправильная буква
+
+Проверка правильности слова с помощью предопределенного словаря
+
+Допускается до 6 попыток за игру
+
+В конце отображается сообщение об успехе или неудаче
+
+Возможность перезапуска, чтобы начать новую игру
+
+4. Интеграция с API
+Извлекайте ежедневные обновления word из API или используйте предопределенный список
+
+Сохраняйте результаты работы пользователей локально, используя localStorage или IndexedDB
+
+5. Производительность и оптимизация
+Оптимизированный рендеринг, позволяющий избежать ненужных повторных рендеров
+
+Упрощенные зависимости
+
+Быстрое время загрузки и эффективное управление активами
+
+6. Качество кода и документация
+Чистый и модульный код в соответствии с рекомендациями
+
+Правильное использование комментариев и документации
+
+Поддержка структурированной организации файлов
+
+7. Хостинг и развертывание
+Должен быть доступен для развертывания на страницах GitHub, Vercel или Netlify
+
+Убедитесь, что включены надлежащие сценарии сборки и развертывания
