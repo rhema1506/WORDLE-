@@ -1,10 +1,21 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.http import HttpResponse
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from .models import Word, Game, Leaderboard
-from .serializers import GameSerializer, LeaderboardSerializer
+from django.apps import apps
 import random
+
+
+def home(request):
+    return HttpResponse("Welcome to the Wordle API!")
+
+# Dynamically get models to avoid import issues
+WordList = apps.get_model('game', 'WordList')
+Game = apps.get_model('game', 'Game')
+Leaderboard = apps.get_model('game', 'Leaderboard')
+
+from .serializers import GameSerializer, LeaderboardSerializer
 
 
 def generate_feedback(guess, correct_word):
@@ -23,8 +34,14 @@ class StartGameView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Select a random word for the game
-        word = random.choice(Word.objects.all())
+        # Ensure at least one word exists before choosing
+        words = list(WordList.objects.values_list('text', flat=True))
+        if not words:
+            return Response({'error': 'No words available in the database'}, status=500)
+
+        word_text = random.choice(words)
+        word = WordList.objects.filter(text=word_text).first()
+
         game = Game.objects.create(user=request.user, word=word)
         return Response({'message': 'Game started', 'game_id': game.id})
 
@@ -42,8 +59,17 @@ class GuessWordView(APIView):
             return Response({'error': 'Active game not found'}, status=404)
 
         feedback = generate_feedback(guess, game.word.text)
+
+        # Ensure game.guesses is a list (handling potential JSON serialization issues)
+        if isinstance(game.guesses, str):
+            import json
+            try:
+                game.guesses = json.loads(game.guesses)
+            except json.JSONDecodeError:
+                game.guesses = []
+
         game.guesses.append({'guess': guess, 'feedback': feedback})
-        
+
         if guess == game.word.text:
             game.is_active = False
             game.result = 'win'

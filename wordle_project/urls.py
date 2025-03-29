@@ -5,10 +5,12 @@ from .swagger import schema_view
 
 
 urlpatterns = [
-    path('', lambda request: redirect('/client/')),  # Redirect root to client menu  
-    path('admin/', admin.site.urls),  
+    path("admin/", admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("api/game/", include("game.urls")), 
+    path("", include("game.urls")),  
     path('accounts/', include('allauth.urls')),  
-    path('api/game/', include('game.urls')),  
+    
 
     # Swagger API Docs
     path('swagger.json', schema_view.without_ui(cache_timeout=0), name='schema-json'),

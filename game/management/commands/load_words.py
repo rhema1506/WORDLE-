@@ -1,12 +1,13 @@
 from django.core.management.base import BaseCommand
-from game.models import Word
+from game.models import WordList
 
 class Command(BaseCommand):
     help = 'Load 5-letter words into the database'
 
     def handle(self, *args, **kwargs):
         # Update this path if you keep your file elsewhere
-        word_file_path = r'C:\Users\rhmus\wordle_backend\wordlist.txt'
+        word_file_path = os.path.join(settings.BASE_DIR, 'WordList.txt')
+
         
         try:
             with open(word_file_path, 'r') as file:
