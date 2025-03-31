@@ -4,7 +4,12 @@ from django.shortcuts import redirect
 from .swagger import schema_view
 
 
+def redirect_to_admin(request):
+    return redirect('/admin')  
+
+
 urlpatterns = [
+     path('', redirect_to_admin),
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
     path("api/game/", include("game.urls")), 
