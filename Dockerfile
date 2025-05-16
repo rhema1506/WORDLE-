@@ -1,18 +1,24 @@
-# Используем официальный образ Python
-FROM python:3.12-slim
+# Use official Python slim image
+FROM python:alpine
 
-# Устанавливаем рабочую директорию
+# Set working directory
 WORKDIR /app
 
-# Устанавливаем системные зависимости (для PostgreSQL)
-RUN apt-get update && apt-get install -y gcc libpq-dev
+# Install system dependencies needed for PostgreSQL and building packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+ && rm -rf /var/lib/apt/lists/*
 
-# Копируем файлы проекта
+# Copy project files to container
 COPY . .
 
-# Устанавливаем зависимости Python
+# Upgrade pip and install Python dependencies
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Запускаем сервер
+# Expose port 8000
+EXPOSE 8000
+
+# Default command to run Django development server
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

@@ -22,10 +22,16 @@ services:
       - db
     environment:
       DATABASE_URL: postgres://wordle_user:wordle_password@db:5432/wordle_db
+      # Optionally add:
+      # DJANGO_SETTINGS_MODULE: wordle_project.settings
+      # PYTHONUNBUFFERED: '1'
     ports:
       - "8000:8000"
     volumes:
       - .:/app
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
 
 volumes:
   postgres_data:
