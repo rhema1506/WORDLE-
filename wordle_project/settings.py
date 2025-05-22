@@ -102,7 +102,7 @@ ROOT_URLCONF = 'wordle_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -116,8 +116,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'wordle_project.wsgi.application'
-
-
 
 
 

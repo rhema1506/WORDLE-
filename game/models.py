@@ -1,40 +1,43 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-import random
 
 
-class WordLength(models.Model):
-    length = models.IntegerField()
-
-    def __str__(self):
-        return str(self.length)
-
-
-class WordList(models.Model):
+class WordBase(models.Model):
     LANGUAGE_CHOICES = [
         ('en', 'English'),
         ('ru', 'Russian'),
     ]
 
-    word = models.CharField(max_length=10, unique=True)
+    word = models.CharField(max_length=6, unique=True)
     language = models.CharField(max_length=2, choices=LANGUAGE_CHOICES, default='en')
-    word_length = models.ForeignKey(WordLength, on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
+
     def __str__(self):
         return self.word
 
-    @staticmethod
-    def get_random_word(language=None, length=None):
-        """
-        Fetch a random word optionally filtered by language and length.
-        """
-        queryset = WordList.objects.all()
-        if language:
-            queryset = queryset.filter(language=language)
-        if length:
-            queryset = queryset.filter(word_length__length=length)
-        words = list(queryset)
-        return random.choice(words) if words else None
+
+class Word4(WordBase):
+    def save(self, *args, **kwargs):
+        if len(self.word) != 4:
+            raise ValueError("Word must be exactly 4 letters")
+        super().save(*args, **kwargs)
+
+
+class Word5(WordBase):
+    def save(self, *args, **kwargs):
+        if len(self.word) != 5:
+            raise ValueError("Word must be exactly 5 letters")
+        super().save(*args, **kwargs)
+
+
+class Word6(WordBase):
+    def save(self, *args, **kwargs):
+        if len(self.word) != 6:
+            raise ValueError("Word must be exactly 6 letters")
+        super().save(*args, **kwargs)
 
 
 class Game(models.Model):
@@ -44,40 +47,74 @@ class Game(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    word = models.ForeignKey(WordList, on_delete=models.CASCADE)
+    word_length = models.PositiveSmallIntegerField()
+    language = models.CharField(max_length=2, choices=WordBase.LANGUAGE_CHOICES, default='en')
+    word4 = models.ForeignKey(Word4, null=True, blank=True, on_delete=models.SET_NULL)
+    word5 = models.ForeignKey(Word5, null=True, blank=True, on_delete=models.SET_NULL)
+    word6 = models.ForeignKey(Word6, null=True, blank=True, on_delete=models.SET_NULL)
     guesses = models.JSONField(default=list)
     is_active = models.BooleanField(default=True)
     started_at = models.DateTimeField(default=timezone.now)
     finished_at = models.DateTimeField(null=True, blank=True)
     result = models.CharField(max_length=10, blank=True, choices=RESULT_CHOICES)
+    trophy = models.CharField(max_length=100, blank=True)  # <-- Added trophy field
 
     def __str__(self):
-        return f"{self.user.username} - {self.word.word} - {self.result or 'in progress'}"
+        return f"{self.user.username} - {self.get_word()} - {self.result or 'in progress'}"
+
+    def get_word(self):
+        if self.word_length == 4 and self.word4:
+            return self.word4.word
+        elif self.word_length == 5 and self.word5:
+            return self.word5.word
+        elif self.word_length == 6 and self.word6:
+            return self.word6.word
+        return None
 
     def end_game(self, result):
         self.is_active = False
         self.finished_at = timezone.now()
         self.result = result
-        self.save()
 
-        leaderboard, _created = Leaderboard.objects.get_or_create(user=self.user)
+        leaderboard, _ = Leaderboard.objects.get_or_create(user=self.user)
         leaderboard.total_games += 1
 
         if result == 'win':
             leaderboard.total_wins += 1
             leaderboard.current_streak += 1
             leaderboard.longest_streak = max(leaderboard.longest_streak, leaderboard.current_streak)
+
+            # Assign trophy based on guesses and streak
+            guess_count = len(self.guesses or [])
+            if guess_count <= 2:
+                self.trophy = "Genius 🧠"
+            elif leaderboard.current_streak >= 10:
+                self.trophy = "Gold Streak 🥇"
+            elif leaderboard.current_streak >= 5:
+                self.trophy = "Silver Streak 🥈"
+            else:
+                self.trophy = "Winner 🏆"
         else:
             leaderboard.current_streak = 0
+            self.trophy = "Try Again 💔"
 
         leaderboard.save()
+        self.save()
 
     @staticmethod
-    def create_new_game(user, language=None, length=None):
-        word = WordList.get_random_word(language=language, length=length)
-        if word:
-            return Game.objects.create(user=user, word=word)
-        return None
+    def create_new_game(user, language='en', length=5):
+        word_obj = None
+        if length == 4:
+            word_obj = Word4.objects.filter(language=language).order_by('?').first()
+            return Game.objects.create(user=user, word_length=4, language=language, word4=word_obj)
+        elif length == 5:
+            word_obj = Word5.objects.filter(language=language).order_by('?').first()
+            return Game.objects.create(user=user, word_length=5, language=language, word5=word_obj)
+        elif length == 6:
+            word_obj = Word6.objects.filter(language=language).order_by('?').first()
+            return Game.objects.create(user=user, word_length=6, language=language, word6=word_obj)
+        else:
+            raise ValueError("Invalid word length")
 
 
 class Leaderboard(models.Model):

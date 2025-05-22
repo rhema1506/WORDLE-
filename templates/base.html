@@ -1,0 +1,23 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}My Wordle App{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>My Wordle Game</h1>
+    </header>
+
+    <main>
+        {% block content %}
+        <!-- child templates put content here -->
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>© 2025 Wordle App</p>
+    </footer>
+</body>
+</html>
