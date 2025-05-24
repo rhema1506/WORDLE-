@@ -1,13 +1,13 @@
-Wordle Game - Backend (Django + PostgreSQL)
-Description
-Backend for the Wordle game, implemented on Django and PostgreSQL. Supports the game with English and Russian words of different lengths (4, 5, 6 letters). Includes REST API with Swagger documentation.
+ Wordle Game (Django + PostgreSQL)
+Описание
+Серверная часть для игры Wordle, реализованная на Django и PostgreSQL. Поддерживает игру с английскими и русскими словами разной длины (4, 5, 6 букв). Включает REST API с документацией по Swagger.
 
-Technologies
+Технологии
 Python 3.12
 
 Django
 
-Django REST Framework
+Фреймворк Django REST
 
 PostgreSQL
 
@@ -15,71 +15,70 @@ Docker + Docker Compose
 
 Swagger (drf_yasg)
 
-Installing and running via Docker
-1. Install Docker and Docker Compose
-Installing Docker
-Installing Docker Compose
+Установка и запуск через Docker
+1. Установите Docker и Docker Compose
+Установка Docker
+Установка Docker Compose
 
-2. Clone the repository
+2. Клонируйте репозиторий
 bash
 
-Copy
+Копировать
 
-Edit
-git clone <your-repository-url>
+Редактировать
+git clone <ваш-url-репозитория>
 cd wordle_backend
-3. Launch containers
+3. Запускаем контейнеры
 bash
 
-Copy
+Копировать
 
-Edit
-docker-compose up --build
-4. Perform the migration
+Отредактируйте
+docker-скомпонуйте -создайте
+4. Выполните
+bash миграции
+
+Копировать
+
+Редактировать
+серверную часть docker-compose exec на python manage.py перенести
+5. Создайте суперпользователя для доступа к админ-панели
 bash
 
-Copy
+Копировать
 
-Edit
-docker-compose exec backend python manage.py migrate
-5. Create a superuser to access the admin panel
-bash
-
-Copy
-
-Edit
-docker-compose exec backend python manage.py createsuperuser
-6. Open in browser
+Редактировать
+docker-compose exec для управления серверной частью python.py создает суперпользователя
+6. Открыть в браузере
 Admin: http://localhost:8000/admin/
 
 Swagger UI: http://localhost:8000/swagger/
 
 ReDoc UI: http://localhost:8000/redoc/
 
-API
-Main endpoints:
-URL	Method	Description	Authentication
-/api/game/start/	POST	Start a new game	Yes
-/api/game/guess/{game_id}/	POST	Make a guess	Yes
-/api/game/leaderboard/	GET	Get top 10 players	Yes
-/api/game/stats/	GET	Get user statistics	Yes
+интерфейс прикладного программирования
+Основные конечные точки:
+URL-адрес с описанием метода Аутентификации
+/api/game/start/ POST Запуск новой игры Да
+/api/game/угадай/{game_id}/ POST Сделай предположение Да
+/api/game/таблица лидеров / GET Получить топ-10 игроков Да
+/api/game/статистика / GET Получить пользовательскую статистику Да
 
-Models
-WordList - words (divided by length and language)
+Модели
+Список слов - слова (разделенные по длине и языку)
 
-Game — the user's current game
+Игра — текущая игра пользователя
 
-Leaderboard — user statistics
+Таблица лидеров — статистика пользователя
 
-Testing
-Run the tests with:
+Тестирование
+Запустите тесты с помощью:
 
-bash
+удар
 
-Copy
+Копировать
 
-Edit
-docker-compose exec backend python manage.py test
-License
-The project is licensed under MIT.
-
+Редактировать
+серверную часть docker-compose exec на python manage.py тест
+Лицензия
+Проект лицензирован Массачусетским технологическим институтом (MIT).

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from .models import Word4, Word5, Word6, Game, Leaderboard
-from .utils import check_guess
+from .utils import check_guess # type: ignore
 
 
 class CheckGuessTestCase(TestCase):
